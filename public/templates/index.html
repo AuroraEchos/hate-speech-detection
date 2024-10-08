@@ -7,8 +7,7 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <title>仇恨言论检测</title>  
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon"> 
     <style>  
         body, html {  
             height: 100%;  
@@ -46,7 +45,7 @@
             align-items: center;
             width: 80%;
             margin: 0 auto;
-            margin-bottom: 20px;
+            margin-bottom: 35px;
         }  
         #input-text {  
             padding: 10px;  
@@ -54,9 +53,11 @@
             border: 1px solid #999595;  
             border-radius: 20px;
             width: 100%;
+            height: 44px;
             background-color: #02020200;
             box-sizing: border-box;
             outline: none;
+            font-size: 16px;
         }  
         .send-icon-container {
             display: flex;
@@ -66,15 +67,18 @@
             height: 33px;
             background-color: rgb(5, 5, 5);
             border-radius: 50%;
-            margin-left: -36px;
+            margin-left: -38px;
             cursor: pointer;
         }
         .send-icon {  
-            width: 23px;
-            height: 23px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             fill: #ffffff;
             box-shadow: 0 0 5px #000;
+        }
+        .hidden {
+            display: none;
         }
         button {  
             margin: 5px;  
@@ -84,7 +88,7 @@
             background-color: #ffffff00;  
             color: #7d7d7d;  
             cursor: pointer;  
-            font-size: 18px;
+            font-size: 20px;
             outline: none;
             display: flex;
             justify-content: center;
@@ -96,11 +100,13 @@
             width: 20px;
             height: 20px;
             fill: #7d7d7d;
+            position: absolute; 
+            margin: 3px 0 0 95px;
         }
         #popup {
             display: none;
             position: fixed;
-            top: 18%;
+            top: 20%;
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: white;
@@ -152,13 +158,54 @@
             border-radius: 5px;
             border: 1px solid #ddd;
         }
-        
+        .network-alert {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            width: 60%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            color: rgb(0, 0, 0);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 9999;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .network-alert p {
+            margin-bottom: 10px;
+        }
+
+        .network-alert button {
+            padding: 10px 20px;
+            border: none;
+            width: 100px;
+            background-color: #060606;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 5px;
+            outline: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .network-alert button:hover {
+            background-color: #333333;
+        }
+        .hidden {
+            display: none;
+        }
+
     </style>  
 </head>
 <body>  
     <main>  
         <button onclick="showDetectingOptions()">
-            Detecting
+            Detect
             <svg class="arrow-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M5.29289 9.29289C5.68342 8.90237 6.31658 8.90237 6.70711 9.29289L12 14.5858L17.2929 9.29289C17.6834 8.90237 18.3166 8.90237 18.7071 9.29289C19.0976 9.68342 19.0976 10.3166 18.7071 10.7071L12.7071 16.7071C12.5196 16.8946 12.2652 17 12 17C11.7348 17 11.4804 16.8946 11.2929 16.7071L5.29289 10.7071C4.90237 10.3166 4.90237 9.68342 5.29289 9.29289Z"/>
             </svg>
@@ -169,7 +216,18 @@
             <div class="input-container"> 
                 <input type="text" id="input-text" placeholder="请输入内容...">  
                 <div class="send-icon-container" onclick="sendInput()">
-                    <svg t="1728198597160" class="send-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2697" width="200" height="200"><path d="M1024 0v1024H0V0z" fill="#011C30" p-id="2698"></path><path d="M892 716.29V492.6L512 64 132 492.6v223.69l303.52-351.32V960h152.81V364.97z" fill="#FFFFFF" p-id="2699"></path></svg>
+                    <!-- 默认的发送图标 -->
+                    <svg id="send-icon" t="1728198597160" class="send-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2697" width="200" height="200">
+                        <path d="M1024 0v1024H0V0z" fill="#011C30" p-id="2698"></path>
+                        <path d="M892 716.29V492.6L512 64 132 492.6v223.69l303.52-351.32V960h152.81V364.97z" fill="#FFFFFF" p-id="2699"></path>
+                    </svg>
+            
+                    <!-- 发送时的图标 -->
+                    <svg id="loading-icon" t="1728315273158" class="send-icon hidden" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="16731" width="200" height="200">
+                        <path d="M67.54958 43.02521H1005.49916v937.94958H67.54958z" fill="#FFFFFF" p-id="16732"></path>
+                        <path d="M1057.129412 1024h-1032.605042V0h1024v1024z m-946.554622-86.05042h851.89916V86.05042H110.57479v851.89916z" fill="#231815" p-id="16733"></path>
+                        <path d="M282.67563 258.151261h516.302521v516.302521h-516.302521z" fill="#231815" p-id="16734"></path>
+                    </svg>
                 </div>
             </div>
         </section>
@@ -181,7 +239,12 @@
         <button class="popup-button" onclick="detectHateSpeech()">
             言论检测</button>
     </div>
-
+    
+    <div id="network-alert" class="network-alert hidden">
+        <p>网络连接已断开，请检查网络连接。</p>
+        <button onclick="closeAlert()">关闭</button>
+    </div>
+    
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <script>
@@ -211,17 +274,55 @@
             currentDetectionType = 'hate';
         }
 
+        // 网络连接断开的提示
+        function checkNetworkStatus() {
+            if (!navigator.onLine) {
+                showAlert();
+                console.log("网络连接已断开");
+            }
+            console.log("网络连接正常");
+        }
+        function showAlert() {
+            var alertBox = document.getElementById('network-alert');
+            alertBox.classList.remove('hidden');
+        }
+
+        function closeAlert() {
+            var alertBox = document.getElementById('network-alert');
+            alertBox.classList.add('hidden');
+        }
+
+        document.getElementById('overlay').onclick = hidePopup;
+
         document.getElementById('input-text').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') { 
                 event.preventDefault();
                 sendInput(); 
             }
         });
+
+        window.onload = function() {
+            checkNetworkStatus();
+
+            window.addEventListener('online', function() {
+                closeAlert();
+            });
+
+            window.addEventListener('offline', function() {
+                showAlert();
+            });
+        };
         
         var socket = io();
         function sendInput() {  
             var inputText = document.getElementById('input-text').value; 
             console.log("当前检测类型：" + currentDetectionType); 
+
+            // 改变发送按钮的图标
+            var sendIcon = document.getElementById('send-icon');
+            var loadingIcon = document.getElementById('loading-icon');
+            sendIcon.classList.add('hidden');
+            loadingIcon.classList.remove('hidden');
 
             if (currentDetectionType === 'sentiment') {
                 socket.emit('message', { msg: inputText, type: 'sentiment' });
@@ -259,6 +360,13 @@
             document.getElementById('input-text').value = '';   
             var resultSection = document.getElementById('result-section');
             resultSection.scrollTop = resultSection.scrollHeight;
+
+            // 恢复发送按钮的图标
+            var sendIcon = document.getElementById('send-icon');
+            var loadingIcon = document.getElementById('loading-icon');
+            sendIcon.classList.remove('hidden');
+            loadingIcon.classList.add('hidden');
+
         });
 
     </script>  
