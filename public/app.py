@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from gevent import pywsgi
 
@@ -8,6 +8,7 @@ from service import *
 app = Flask(__name__)
 app.secret_key = '021104'
 socketio = SocketIO(app)
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -19,38 +20,42 @@ def handle_message(data):
     detect_type = data.get('type') 
 
     try:
-        if detect_type == 'sentiment':
-            sentiment_analyzer = SentimentAnalyzer()
-            emotion_label, intensity, duration = sentiment_analyzer.predict(message)
-
+        lang = detect_language(message)
+        if lang == 'unknown':
             response_data = {
+                'type': "error",
                 'input': message,
-                'result': f"情绪: {emotion_label}, 置信度: {intensity:.4f}, 耗时: {duration:.4f}秒"
+                'result': "无法识别的文本, 请检查输入"
             }
-
-        elif detect_type == 'hate':
-            """ hate_speech_analyzer = HateSpeechAnalyzer()
-            hate_label, intensity, duration = hate_speech_analyzer.predict(message)
-
-            response_data = {
-                'input': message,
-                'result': f"检测结果: {hate_label}, 置信度: {intensity:.4f}, 耗时: {duration:.4f}秒"
-            } """
-            response_data = {
-                'input': message,
-                'result': "检测结果: 仇恨检测模型目前并未实现"
-            }
-
         else:
-            response_data = {
-                'input': message,
-                'result': "无效的检测类型"
-            }
+            if detect_type == 'sentiment':
+                sentiment_analyzer = SentimentAnalyzer()
+                result = sentiment_analyzer.predict(message)
+                response_data = {
+                    'type': "sentiment_analysis",
+                    'input': message,
+                    'result': result
+                }
+
+            elif detect_type == 'hate':
+                if lang == 'zh':
+                    translat = Translator()
+                    message_tr = translat.translate(message)
+                
+                hate_speech_analyzer = HateSpeechAnalyzer()
+                result = hate_speech_analyzer.predict(message_tr)
+                print(result)
+                response_data = {
+                    'type': "hate_speech_detection",
+                    'input': message,
+                    'result': result
+                }
 
     except Exception as e:
         response_data = {
+            'type': "error",
             'input': message,
-            'result': "后端服务器出错: " + str(e)
+            'result': "服务器发生错误，请稍后再试。"
         }
 
     emit('response', response_data)
@@ -58,6 +63,6 @@ def handle_message(data):
 
 
 if __name__ == '__main__':
-    server = pywsgi.WSGIServer(('127.0.0.1', 8080), app)
-    print('Server running at http://127.0.0.1:8080/')
+    server = pywsgi.WSGIServer(('127.0.0.1', 5000), app)
+    print('Server running at http://127.0.0.1:5000/')
     server.serve_forever()

@@ -20,10 +20,10 @@
             flex-direction: column;  
             height: 100%;  
         }  
-        #result-section {  
+        #result-section {
             flex: 1;  
             padding: 20px;  
-            overflow-y: hidden;
+            overflow-y: scroll;
             background-color: #ffffff;  
             font-family: 'Arial', sans-serif;
             font-size: 16px;
@@ -32,6 +32,15 @@
             letter-spacing: 0.5px;
             text-align: left;
             word-wrap: break-word;
+        }
+
+        #result-section::-webkit-scrollbar {
+            display: none;
+        }
+
+        #result-section {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
         #input-section {  
@@ -157,7 +166,12 @@
             background-color: #f9f9f9;
             border-radius: 5px;
             border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column; 
+            overflow: auto;
         }
+
+
         .network-alert {
             position: fixed;
             top: 30%;
@@ -199,6 +213,20 @@
         .hidden {
             display: none;
         }
+        .hate-speech-chart {
+            width: 80%;
+            height: auto;
+            max-width: 600px;
+            margin: 20px auto; 
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .hate-speech-chart {
+                width: 80%;    /* 在小屏幕上使用 80% */
+                max-width: 80%; /* 最大宽度为 100% */
+            }
+        }
+
 
     </style>  
 </head>
@@ -210,7 +238,7 @@
                 <path d="M5.29289 9.29289C5.68342 8.90237 6.31658 8.90237 6.70711 9.29289L12 14.5858L17.2929 9.29289C17.6834 8.90237 18.3166 8.90237 18.7071 9.29289C19.0976 9.68342 19.0976 10.3166 18.7071 10.7071L12.7071 16.7071C12.5196 16.8946 12.2652 17 12 17C11.7348 17 11.4804 16.8946 11.2929 16.7071L5.29289 10.7071C4.90237 10.3166 4.90237 9.68342 5.29289 9.29289Z"/>
             </svg>
         </button>
-        <section id="result-section">  
+        <section id="result-section">
         </section>  
         <section id="input-section">  
             <div class="input-container"> 
@@ -244,9 +272,10 @@
         <p>网络连接已断开，请检查网络连接。</p>
         <button onclick="closeAlert()">关闭</button>
     </div>
-    
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>
     <script>
         var currentDetectionType = 'sentiment';
         function showDetectingOptions() {
@@ -330,38 +359,115 @@
                 socket.emit('message', { msg: inputText, type: 'hate' });
             }
         }
+        function drawHateSpeechChart(canvasId, labels, data) {
+            var ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '辅助预测概率',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: '辅助预测结果'
+                        }
+                    }
+                }
+            });
+        }
+
         socket.on('response', function(data) {
             console.log(data);
 
+            var typeText = data.type;
             var inputText = data.input;
             var resultText = data.result;
+            console.log("检测类型：" + typeText);
+            console.log("输入内容：" + inputText);
+            console.log("检测结果：" + resultText);
 
-            if (resultText.startsWith("情绪:")) {
+            if (typeText === 'error') {
                 document.getElementById('result-section').insertAdjacentHTML('beforeend', 
                 "<div class='result-item'>" +
-                    "<strong>输入内容：</strong>" + inputText + "<br>" + 
-                    "<strong>检测结果：</strong>" + resultText + 
-                "</div>"
-                );
-            } else if (resultText.startsWith("检测结果:")) {
-                document.getElementById('result-section').insertAdjacentHTML('beforeend', 
-                "<div class='result-item'>" +
-                    "<strong>输入内容：</strong>" + inputText + "<br>" + 
-                    "<strong>检测结果：</strong>" + resultText + 
-                "</div>"
-                );
-            } else {
-                resultItem.innerHTML = 
                     "<strong>输入内容：</strong>" + inputText + "<br>" + 
                     "<strong>错误信息：</strong>" + resultText + 
-                    "<br><span style='color: red;'>检测失败！请重试。</span>";
+                    "</div>"
+                );
+            } else if (typeText === 'sentiment_analysis') {
+                var formattedResult = `
+                    <div class='result-item'>
+                        <strong>输入内容：</strong><span class='input-text'>${inputText}</span><br>
+                        <strong>检测结果：</strong>
+                        <ul class='result-list'>
+                            <li><strong>文本:</strong> ${resultText['文本']}</li>
+                            <li><strong>预测情绪:</strong> ${resultText['预测情绪']}</li>
+                            <li><strong>置信度:</strong> ${resultText['置信度'].toFixed(4)}</li>
+                            <li><strong>耗时:</strong> ${resultText['耗时'].toFixed(4)} 秒</li>
+                        </ul>
+                    </div>`;
+
+                document.getElementById('result-section').insertAdjacentHTML('beforeend', formattedResult);
+            } else if (typeText === 'hate_speech_detection') {
+                var canvasId = 'hate-speech-chart-' + Date.now();
+                var formattedResult = `
+                    <div class='result-item'>
+                        <strong>输入内容：</strong><span class='input-text'>${inputText}</span><br>
+                        <strong>检测结果：</strong>
+                        <ul class='result-list'>
+                            <li><strong>文本:</strong> ${inputText}</li>
+                            <li><strong>主要预测概率:</strong> ${resultText['主要预测概率'].toFixed(4)}</li>
+                            <li><strong>辅助预测:</strong>
+                                <ul>
+                                    ${Object.entries(resultText['辅助预测']).map(([cls, prob]) => `
+                                        <li>${cls}: ${prob.toFixed(4)}</li>
+                                    `).join('')}
+                                </ul>
+                            </li>
+                            <li><strong>耗时:</strong> ${resultText['耗时'].toFixed(4)} 秒</li>
+                        </ul>
+                        <canvas id='${canvasId}' class='hate-speech-chart' width='400' height='400'></canvas> <!-- 在这里添加 canvas -->
+                    </div>`;
+
+                // 提取辅助预测的标签和数据
+                var auxiliaryPredictions = resultText['辅助预测'];
+                var labels = Object.keys(auxiliaryPredictions);
+                var data = Object.values(auxiliaryPredictions).map(prob => prob.toFixed(4));
+                
+                document.getElementById('result-section').insertAdjacentHTML('beforeend', formattedResult);
+                drawHateSpeechChart(canvasId, labels, data);
             }
 
             document.getElementById('input-text').value = '';   
             var resultSection = document.getElementById('result-section');
+            
             resultSection.scrollTop = resultSection.scrollHeight;
 
-            // 恢复发送按钮的图标
             var sendIcon = document.getElementById('send-icon');
             var loadingIcon = document.getElementById('loading-icon');
             sendIcon.classList.remove('hidden');

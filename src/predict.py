@@ -68,12 +68,8 @@ if __name__ == "__main__":
     predictor = ToxicityPredictor('model/train_model.keras', 'model/tokenizer.json')
 
     texts = [
-        "I love programming and learning new things.",
-        "You are such a loser.",
-        "This is a great product!",
-        "I hate everyone who disagrees with me.",
-        "Shut up, you are dumb!",
-        "You should be ashamed of yourself!"
+        "You ignorant fools are really disgusting.",
+        "I hate everyone who disagrees with me. Stinky bitch."
     ]
 
     predictions = predictor.predict(texts)
