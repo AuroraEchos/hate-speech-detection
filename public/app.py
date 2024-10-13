@@ -1,13 +1,12 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-from gevent import pywsgi
 
 from service import *
 
 
 app = Flask(__name__)
 app.secret_key = '021104'
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -61,8 +60,7 @@ def handle_message(data):
     emit('response', response_data)
 
 
-
 if __name__ == '__main__':
-    server = pywsgi.WSGIServer(('127.0.0.1', 5000), app)
-    print('Server running at http://127.0.0.1:5000/')
-    server.serve_forever()
+    print("Server is running on http://127.0.0.1:8080")
+    socketio.run(app, host='127.0.0.1', port=8080)
+    

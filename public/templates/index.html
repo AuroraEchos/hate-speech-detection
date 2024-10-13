@@ -90,7 +90,7 @@
             display: none;
         }
         button {  
-            margin: 5px;  
+            margin: 10px;  
             padding: 5px 10px;  
             border: none;  
             border-radius: 5px;  
@@ -210,9 +210,7 @@
         .network-alert button:hover {
             background-color: #333333;
         }
-        .hidden {
-            display: none;
-        }
+        
         .hate-speech-chart {
             width: 80%;
             height: auto;
@@ -226,8 +224,131 @@
                 max-width: 80%; /* 最大宽度为 100% */
             }
         }
+        
+        #loading-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2); 
+            backdrop-filter: blur(0.75px);
+            color: rgb(0, 0, 0);
+            font-size: 24px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            display: none;
+        }
+        #bars1 {
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            height: 50px;
+            width: 100px;
+            margin: -25px 0 0 -25px;
+            }
 
+        #bars1 span {
+        position: absolute;
+        display: block;
+        bottom: 9px;
+        width: 10px;
+        height: 5px;
+        background: rgba(0, 0, 0, 0.25);
+        -webkit-animation: bars1 1.5s  infinite ease-in-out;
+                animation: bars1 1.5s  infinite ease-in-out;
+        }
 
+        #bars1 span:nth-child(2) {
+        left: 11px;
+        -webkit-animation-delay: 0.2s;
+                animation-delay: 0.2s;
+        }
+
+        #bars1 span:nth-child(3) {
+        left: 22px;
+        -webkit-animation-delay: 0.4s;
+                animation-delay: 0.4s;
+        }
+
+        #bars1 span:nth-child(4) {
+        left: 33px;
+        -webkit-animation-delay: 0.6s;
+                animation-delay: 0.6s;
+        }
+
+        #bars1 span:nth-child(5) {
+        left: 44px;
+        -webkit-animation-delay: 0.8s;
+                animation-delay: 0.8s;
+        }
+
+        @keyframes bars1 {
+        0% {
+            height: 5px;
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            background: rgba(0, 0, 0, 0.25);
+        }
+        25% {
+            height: 30px;
+            -webkit-transform: translateY(15px);
+                    transform: translateY(15px);
+            -webkit-transform: translateY(15px);
+                    transform: translateY(15px);
+            background: #000000;
+        }
+        50% {
+            height: 5px;
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            background: rgba(0, 0, 0, 0.25);
+        }
+        100% {
+            height: 5px;
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            background: rgba(0, 0, 0, 0.25);
+        }
+        }
+        @-webkit-keyframes bars1 {
+        0% {
+            height: 5px;
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            background: rgba(0, 0, 0, 0.25);
+        }
+        25% {
+            height: 30px;
+            -webkit-transform: translateY(15px);
+                    transform: translateY(15px);
+            background: #000000;
+        }
+        50% {
+            height: 5px;
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            background: rgba(0, 0, 0, 0.25);
+        }
+        100% {
+            height: 5px;
+            -webkit-transform: translateY(0px);
+                    transform: translateY(0px);
+            background: rgba(0, 0, 0, 0.25);
+        }
+        }
+        .hidden {
+            display: none;
+        }
     </style>  
 </head>
 <body>  
@@ -272,10 +393,18 @@
         <p>网络连接已断开，请检查网络连接。</p>
         <button onclick="closeAlert()">关闭</button>
     </div>
+    <div id="loading-screen" class="hidden">
+        <div id="bars1">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>
     <script>
         var currentDetectionType = 'sentiment';
         function showDetectingOptions() {
@@ -342,7 +471,8 @@
             });
         };
         
-        var socket = io();
+        var socket = io()
+
         function sendInput() {  
             var inputText = document.getElementById('input-text').value; 
             console.log("当前检测类型：" + currentDetectionType); 
@@ -350,6 +480,11 @@
             // 改变发送按钮的图标
             var sendIcon = document.getElementById('send-icon');
             var loadingIcon = document.getElementById('loading-icon');
+            // 显示加载屏幕
+            var loading = document.getElementById('loading-screen');
+            loading.style.display = 'block';
+            console.log("动画已经显示");
+           
             sendIcon.classList.add('hidden');
             loadingIcon.classList.remove('hidden');
 
@@ -470,8 +605,11 @@
 
             var sendIcon = document.getElementById('send-icon');
             var loadingIcon = document.getElementById('loading-icon');
+            var loading = document.getElementById('loading-screen');
             sendIcon.classList.remove('hidden');
             loadingIcon.classList.add('hidden');
+            loading.style.display = 'none';
+            console.log("动画已经隐藏");
 
         });
 
