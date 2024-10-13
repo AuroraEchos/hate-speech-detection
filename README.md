@@ -1,5 +1,15 @@
 # 仇恨言论检测
 
+## 目录
+1. [项目简介](#项目简介)
+2. [技术栈](#技术栈)
+3. [模型结构](#模型结构)
+4. [关键技术点](#关键技术点)
+5. [数据来源](#数据来源)
+6. [结果](#结果)
+7. [参考](#参考)
+8. [使用说明](#使用说明)
+
 ## 项目简介
 本项目旨在通过深度学习模型检测仇恨言论。模型结合了多种技术，预训练的词嵌入、双向LSTM、注意力机制和多任务学习，以有效捕捉文本中的全局和局部特征，模型结构合理且有较强的表示能力。
 
@@ -28,7 +38,7 @@
 1. 训练数据：[Jigsaw Unintended Bias in Toxicity Classification](https://www.kaggle.com/competitions/jigsaw-unintended-bias-in-toxicity-classification)
 2. 预训练词嵌入:[Global Vectors for Word Representation](https://nlp.stanford.edu/projects/glove/) | [2 million word vectors trained on Common Crawl](https://fasttext.cc/docs/en/english-vectors.html)
 
-## 结果说明
+## 结果
 
 ### 1.**分类报告**
 ![分类报告](./src/result/ClassReport.png)
@@ -74,3 +84,16 @@
 
 ## 参考
 - 模型参考：[kaggle](https://www.kaggle.com/code/thousandvoices/simple-lstm/script)
+
+
+## 使用说明
+1. 本项目提供了完整的已训练模型，包括情感分类模型和仇恨言论检测模型。用户可通过以下链接下载并使用这些模型：
+   - [点击此处下载模型（跳转至 Kaggle 下载页面）](https://www.kaggle.com/models/wenhao02/nlp)
+
+2. 为方便用户进行测试和使用，本项目开发了一个简易的用户界面。操作步骤如下：
+   - 安装项目所需的依赖库。
+   - 运行 `app.py` 文件以启动本地服务器。
+
+3. 本项目的主要目的是开发仇恨言论检测模型。然而，在界面开发阶段，由于仇恨言论检测模型尚未完全整合，项目暂时使用了情感分类模型作为替代，以方便进行接口开发和测试。如果您对情感分类模型感兴趣，可以在该[代码仓库](https://github.com/AuroraEchos/SetimentAnalysis)中找到完整的说明和使用指南。
+
+4. 所有与仇恨言论检测相关的代码均存放于 `src` 文件夹中。

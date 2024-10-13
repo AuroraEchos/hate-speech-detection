@@ -1,3 +1,7 @@
+# This is the main file for the Flask server. It is responsible for handling the incoming requests and sending the response back to the client.
+# Date: 2024/10/14
+# Author: Wehhao Liu
+
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 
