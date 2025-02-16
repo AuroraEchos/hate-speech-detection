@@ -1,99 +1,81 @@
-# 仇恨言论检测
+# 基于 RoBERTa 的中文仇恨言论检测
+本项目实现了一个**仇恨言论检测**模型，采用了**RoBERTa**、**BiGRU**和**TextCNN**相结合的架构进行文本分类。该模型旨在基于预训练的RoBERTa模型，通过结合BiGRU和TextCNN模型，进行中文仇恨言论的识别。
 
-## 目录
-1. [项目简介](#项目简介)
-2. [技术栈](#技术栈)
-3. [模型结构](#模型结构)
-4. [关键技术点](#关键技术点)
-5. [数据来源](#数据来源)
-6. [结果](#结果)
-7. [参考](#参考)
-8. [使用说明](#使用说明)
+## 项目结构
 
-## 项目简介
-本项目旨在通过深度学习模型检测仇恨言论。模型结合了多种技术，预训练的词嵌入、双向LSTM、注意力机制和多任务学习，以有效捕捉文本中的全局和局部特征，模型结构合理且有较强的表示能力。
+- `train.py`：用于训练模型的脚本。
+- `test.py`：用于在测试集上评估训练好的模型，并输出评估指标。
+- `inference.py`：用于对用户输入文本进行推理，判断其是否为仇恨言论。
+- `Data/`：存放训练集、验证集和测试集CSV文件的文件夹。
+- `chinese_roberta_wwm_ext/`: 存放从 Huggingface 下载的预训练模型（chinese-roberta-wwm-ext）。
+- `best_model.pth`：训练过程中保存的最优模型。
+- `README.md`：此文件。
 
-## 技术栈
-- Python
-- TensorFlow / Keras
-- GloVe / FastText（词嵌入）
+## 环境要求
 
-## 模型结构
-1. **Embedding层**：使用预训练的词嵌入将输入的词序列转化为固定维度的向量表示。
-2. **SpatialDropout1D层**：防止过拟合，对整个嵌入向量进行丢弃。
-3. **双向LSTM层**：堆叠的双向LSTM，适合处理序列数据。
-4. **多头注意力**：增强模型捕捉文本全局信息的能力。
-5. **层归一化**：用于规范化激活值，稳定模型。
-6. **全连接层**：使用`tanh`和`relu`激活函数，提高模型的复杂度。
-7. **主任务和辅助任务输出**：支持多任务学习，提高模型的泛化能力。
-8. **损失函数与优化器**：使用`binary_crossentropy`损失函数和`Adam`优化器，进行梯度裁剪。
+- Python 3.7+
+- Pytorch 2.6.0
+- transformers 4.48.3
 
-## 关键技术点
-1. **词向量**：利用预训练的词向量（如Glove、Word2Vec）可以有效提升模型性能，同时减少训练时间。
-2. **双向LSTM**：双向LSTM可以同时考虑序列中的前向和后向信息，从而更好地捕捉文本的上下文关系。
-3. **注意力机制**：注意力机制可以帮助模型关注输入序列中的重要部分，从而提高模型的表达能力。
-4. **多模型集成**：通过训练多个模型，然后对结果进行加权平均，可以有效降低模型的过拟合风险，提高模型的泛化能力。
+## 数据集
 
-## 数据来源
-1. 训练数据：[Jigsaw Unintended Bias in Toxicity Classification](https://www.kaggle.com/competitions/jigsaw-unintended-bias-in-toxicity-classification)
-2. 预训练词嵌入:[Global Vectors for Word Representation](https://nlp.stanford.edu/projects/glove/) | [2 million word vectors trained on Common Crawl](https://fasttext.cc/docs/en/english-vectors.html)
+数据集来源：[COLD](https://github.com/thu-coai/COLDataset)
+
+## 训练模型
+
+可以直接运行 `train.py` 文件或者使用下列命令：
+
+```
+python train.py --model_path ./chinese_roberta_wwm_ext --max_length 128 --batch_size 64 --train_path Data/train.csv --dev_path Data/dev.csv --test_path Data/test.csv --epochs 5
+```
+
+此命令将使用指定的路径训练模型，并保存最佳模型。
+
+## 评估模型
+
+训练完成后，使用以下命令在测试集上评估模型：
+
+```
+python test.py --model_path best_model.pth --test_path Data/test.csv --tokenizer_name ./chinese_roberta_wwm_ext --device cuda
+```
+
+此命令将加载最佳保存的模型，并在测试集上进行评估，输出准确率、精确率、召回率和F1值等指标。
+
+## 推理
+
+要对用户输入的单条文本进行推理，使用以下命令：
+
+```
+python inference.py --model_path best_model.pth --tokenizer_name ./chinese_roberta_wwm_ext --device cuda
+```
+
+你将被提示输入一句话，模型会将其分类为仇恨言论（1）或非仇恨言论（0）。
+
+## 示例
+
+以下是进行推理的示例：
+
+```
+Enter a sentence for prediction: 你们这些人真恶心！
+This sentence is classified as Hate Speech.
+```
 
 ## 结果
 
-### 1.**分类报告**
-![分类报告](./src/result/ClassReport.png)
-模型对二分类任务的分类性能表现可以通过以下四个关键指标进行分析：**精确率（Precision）**、**召回率（Recall）**、**F1-Score**以及**支持度（Support）**。此外，还有宏平均（Macro Avg）和加权平均（Weighted Avg）。
+模型在测试集上取得了以下性能：
 
-#### 1. **类别 0 (非仇恨言论)**
-   - **精确率（Precision）**：96.60%
-   - **召回率（Recall）**：98.44%
-   - **F1-Score**：97.52%
-   - **支持度（Support）**：331,897
+- **准确率（Accuracy）**: 82.85%
+- **精确率（Precision）**: 74.15%
+- **召回率（Recall）**: 87.00%
+- **F1-Score**: 80.06%
 
-   模型在识别非仇恨言论上表现非常好，精确率、召回率和 F1-Score 都很高，表明模型能有效区分正常言论，并且很少将仇恨言论误分类为正常言论。
+## 许可证
 
-#### 2. **类别 1 (仇恨言论)**
-   - **精确率（Precision）**：77.32%
-   - **召回率（Recall）**：60.49%
-   - **F1-Score**：67.88%
-   - **支持度（Support）**：29,078
+本项目采用MIT许可证 - 详情请见 **LICENSE** 文件。
 
-   对仇恨言论的识别能力相对较低，精确率为77.32%，而召回率仅为60.49%，意味着模型虽然在预测仇恨言论时较为准确，但可能漏掉了部分仇恨言论（即较低的召回率）。
+## 致谢
 
-#### 3. **宏平均 (Macro Avg)**
-   - **精确率（Precision）**：86.96%
-   - **召回率（Recall）**：79.47%
-   - **F1-Score**：82.70%
-   - **支持度（Support）**：360,975
-
-   宏平均计算每个类别的指标平均值，未考虑类别的不平衡。它显示出模型对两个类别的整体表现，精确率和召回率适中，表明在处理类别不平衡时，模型的表现有一定的局限性。
-
-#### 4. **加权平均 (Weighted Avg)**
-   - **精确率（Precision）**：95.05%
-   - **召回率（Recall）**：95.39%
-   - **F1-Score**：95.13%
-   - **支持度（Support）**：360,975
-
-   加权平均考虑了每个类别的样本量，通过支持度对指标进行加权平均。这一结果表明模型的总体性能表现优异，特别是对大多数样本的正确分类。
-
-### 2.**ROC**
-![ROC](./src/result/ROC.png) 
-   - ROC曲线越靠近左上角，模型的性能越好。结果中的曲线非常接近左上角，说明模型的分类效果非常好。
-   - AUC（Area Under the Curve）值为0.9667，AUC的值介于0.5和1之间。AUC越接近1，说明模型的性能越好。0.9667是一个非常高的AUC值，表明模型具有很强的区分能力。
-   - 综合来看，这张ROC曲线图表明这个分类模型的性能非常优秀。它能够很好地将正样本和负样本区分开来，具有很高的准确率和泛化能力。
-
-## 参考
-- 模型参考：[kaggle](https://www.kaggle.com/code/thousandvoices/simple-lstm/script)
+项目思路来源于[(Chinese Hate Speech detection method Based on RoBERTa-WWM)](https://aclanthology.org/2023.ccl-1.44/)，向其作者表示感谢。
 
 
-## 使用说明
-1. 本项目提供了完整的已训练模型，包括情感分类模型和仇恨言论检测模型。用户可通过以下链接下载并使用这些模型：
-   - [点击此处下载模型（跳转至 Kaggle 下载页面）](https://www.kaggle.com/models/wenhao02/nlp)
 
-2. 为方便用户进行测试和使用，本项目开发了一个简易的用户界面。操作步骤如下：
-   - 安装项目所需的依赖库。
-   - 运行 `app.py` 文件以启动本地服务器。
-
-3. 本项目的主要目的是开发仇恨言论检测模型。然而，在界面开发阶段，由于仇恨言论检测模型尚未完全整合，项目暂时使用了情感分类模型作为替代，以方便进行接口开发和测试。如果您对情感分类模型感兴趣，可以在该[代码仓库](https://github.com/AuroraEchos/SetimentAnalysis)中找到完整的说明和使用指南。
-
-4. 所有与仇恨言论检测相关的代码均存放于 `src` 文件夹中。
