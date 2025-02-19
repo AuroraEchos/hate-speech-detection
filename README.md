@@ -1,5 +1,5 @@
 # 基于 RoBERTa 的中文仇恨言论检测
-本项目实现了一个**仇恨言论检测**模型，采用了**RoBERTa**、**BiGRU**和**TextCNN**相结合的架构进行文本分类。该模型旨在基于预训练的RoBERTa模型，通过结合BiGRU和TextCNN模型，进行中文仇恨言论的识别。您可以在[这里](https://www.chatlwh.com/posts/post20250201.html)看到更详细的说明。
+本项目实现了一个**仇恨言论检测**模型，采用了**RoBERTa**、**BiGRU**和**TextCNN**相结合的架构进行文本分类。该模型旨在基于预训练的RoBERTa模型，通过结合BiGRU和TextCNN模型，进行中文仇恨言论的识别。您可以在[这里](https://www.chatlwh.com/posts/20240925/article.html)看到更详细的说明。
 
 ## 项目结构
 
